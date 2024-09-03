@@ -20,7 +20,6 @@ int main()
     int num_of_layers = 3;
     std::vector<int> nodes_per_layer = {28*28, 40, 10};
 
-
     return 0;
 }
 // comment

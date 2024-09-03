@@ -6,6 +6,8 @@
 #include <string>
 #include <vector>
 #include <cassert>
+#include <cuda.h>
+
 namespace MNIST
 {
     u_int32_t read_and_bitswap(std::ifstream &file)
@@ -62,6 +64,44 @@ namespace MNIST
         }
         
         return labels;
+    }
+
+    std::vector<float> format_image(std::vector<u_int8_t> image, const int num_of_pixles, const int size)
+    {
+        std::vector<float> formatted(num_of_pixles);
+
+        u_int8_t* d_image;
+        float* d_formatted;
+
+        cudaMalloc(&d_image, sizeof(u_int8_t)*num_of_pixles);
+        cudaMalloc(&d_formatted, sizeof(float)*num_of_pixles);
+
+        cudaMemcpy(d_image, image.data(), sizeof(u_int8_t)*num_of_pixles, cudaMemcpyHostToDevice);
+        cudaMemcpy(d_formatted, formatted.data(), sizeof(u_int8_t)*num_of_pixles, cudaMemcpyHostToDevice);
+
+        dim3 blockSize(64,1); // threads per block
+        dim3 gridSize((size + blockSize.x - 1)/blockSize.x,1); // blocks in a grid
+        format_image<<<gridSize,blockSize>>>(d_image, d_formatted, size);
+
+        cudaMemcpy(formatted.data(), d_formatted, sizeof(float)*num_of_pixles, cudaMemcpyDeviceToHost);
+
+        cudaFree(d_image);
+        cudaFree(d_formatted);
+
+        return formatted;
+
+    } 
+
+    __global__
+    void format_image(const u_int8_t* image, float* formatted, const int size)
+    {
+        int row = threadIdx.x + blockDim.x*blockIdx.x;
+        int col = threadIdx.y + blockDim.y*blockIdx.y;
+        if ( row < size && col < size)
+        {
+            formatted[row + size*col] = (float) (image[row + size*col]/255);
+        }
+
     }
 }
 

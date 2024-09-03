@@ -5,7 +5,6 @@
 #include <cuda.h>
 #include <stdio.h>
 #include "cuda_ops.hpp"
-#include <concepts>
 
 namespace neural
 {   
