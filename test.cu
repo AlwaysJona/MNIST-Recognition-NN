@@ -2,6 +2,7 @@
 #include "doctest.h"
 #include <vector>
 #include "cuda_ops.hpp"
+#include "neural.hpp"
 
 TEST_CASE("Testing Cuda matrix operations")
 {
@@ -62,5 +63,53 @@ TEST_CASE("Testing Cuda matrix operations")
 
     cudaFree(d_A);
     cudaFree(d_B);
+
+}
+
+TEST_CASE("Testing NN forward propagation")
+{
+    std::vector<float> image = {0, 1, 0,
+                                0, 1, 0,
+                                0, 1, 0};
+
+    std::vector<float> label = {0,0,1};
+
+    int num_of_layers = 3;
+    std::vector<int> nodes_per_layer = {9, 5, 3};
+
+    std::vector<std::vector<float>> weights; // create weights vector
+
+    std::vector<std::vector<float>> biases; // create biases vector
+
+    std::vector<std::vector<float>> layers; // create layers vector
+
+    // initialize layers vector, first layer is image, the rest are zero vectors
+
+    layers.push_back(image);
+
+    for(int i = 1; i < num_of_layers; i++) 
+    {
+        std::vector<float> temp(nodes_per_layer[i]);
+        layers.push_back(temp);
+    }
+
+    // initialize weights and biases vectors
+
+    for(int i = 0; i < num_of_layers - 1; i++)
+    {
+        std::vector<float> w_temp;
+        for(int j = 0; j < nodes_per_layer[i]*nodes_per_layer[i+1]; j++)
+        {
+            w_temp.push_back(0.5);
+        }
+        weights.push_back(w_temp);
+
+        std::vector<float> b_temp(nodes_per_layer[i]*nodes_per_layer[i+1]);
+        biases.push_back(b_temp);
+    }
+
+    neural::forward_prop(layers, weights, biases, (nodes_per_layer).data(), num_of_layers);
+
+    
 
 }

@@ -68,7 +68,7 @@ namespace neural
         return loss;
     }
     // forward propagation of the layers starting from the input layer
-    void forward_prop(float** layers, float** weights, float** biases, float* nodes_per_layer, const int& num_of_layers)
+    void forward_prop(std::vector<std::vector<float>>& layers, const std::vector<std::vector<float>> weights, const std::vector<std::vector<float>> biases, const int* nodes_per_layer, const int& num_of_layers)
     {
         for(int i = 0; i < num_of_layers - 1; i++)
         {
@@ -80,9 +80,9 @@ namespace neural
             cudaMalloc(&d_weights, sizeof(float)*nodes_per_layer[i]*nodes_per_layer[i+1]);
             cudaMalloc(&d_biases, sizeof(float)*nodes_per_layer[i]);
 
-            cudaMemcpy(d_layer, layers[i], sizeof(float)*nodes_per_layer[i], cudaMemcpyHostToDevice);
-            cudaMemcpy(d_weights, weights[i], sizeof(float)*nodes_per_layer[i]*nodes_per_layer[i+1], cudaMemcpyHostToDevice);
-            cudaMemcpy(d_biases, biases[i], sizeof(float)*nodes_per_layer[i], cudaMemcpyHostToDevice);
+            cudaMemcpy(d_layer, layers[i].data(), sizeof(float)*nodes_per_layer[i], cudaMemcpyHostToDevice);
+            cudaMemcpy(d_weights, weights[i].data(), sizeof(float)*nodes_per_layer[i]*nodes_per_layer[i+1], cudaMemcpyHostToDevice);
+            cudaMemcpy(d_biases, biases[i].data(), sizeof(float)*nodes_per_layer[i], cudaMemcpyHostToDevice);
 
             dim3 threadsPerBlock(64, 1);  // 64 threads in the x-dimension
             dim3 numBlocks((nodes_per_layer[i+1] + threadsPerBlock.x - 1) / threadsPerBlock.x, 1);
@@ -90,7 +90,7 @@ namespace neural
             cuda_ops::matrix_mult<<<numBlocks,threadsPerBlock>>>(d_layer, d_weights, d_layer, 1, nodes_per_layer[i], nodes_per_layer[i+1]);
             cuda_ops::matrix_add<<<numBlocks,threadsPerBlock>>>(d_layer, d_biases, d_layer, 1, nodes_per_layer[i+1]);
 
-            cudaMemcpy(layers[i+1], d_layer, sizeof(float)*nodes_per_layer[i+1], cudaMemcpyDeviceToHost);
+            cudaMemcpy(layers[i+1].data(), d_layer, sizeof(float)*nodes_per_layer[i+1], cudaMemcpyDeviceToHost);
 
             cudaFree(d_layer);
             cudaFree(d_weights);
@@ -102,13 +102,17 @@ namespace neural
 
         cudaMalloc(&d_last_layer, sizeof(float)*nodes_per_layer[num_of_layers - 1]);
 
-        cudaMemcpy(d_last_layer, layers[num_of_layers - 1], sizeof(float)*nodes_per_layer[num_of_layers - 1], cudaMemcpyHostToDevice);
+        cudaMemcpy(d_last_layer, layers[num_of_layers - 1].data(), sizeof(float)*nodes_per_layer[num_of_layers - 1], cudaMemcpyHostToDevice);
 
         dim3 threadsPerBlock(64, 1);  // 64 threads in the x-dimension
         dim3 numBlocks((nodes_per_layer[num_of_layers - 1] + threadsPerBlock.x - 1) / threadsPerBlock.x, 1);
 
         // applying softmax to the last layer
         Softmax(d_last_layer, d_last_layer, d_last_layer, 1, nodes_per_layer[num_of_layers - 1], numBlocks, threadsPerBlock);
+
+        cudaMemcpy(layers[num_of_layers - 1].data(), d_last_layer, sizeof(float)*nodes_per_layer[num_of_layers - 1], cudaMemcpyDeviceToHost);
+
+        cudaFree(d_last_layer);
 
     }
 }
