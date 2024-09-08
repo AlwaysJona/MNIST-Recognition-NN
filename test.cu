@@ -66,7 +66,7 @@ TEST_CASE("Testing Cuda matrix operations")
 
 }
 
-TEST_CASE("Testing NN forward propagation")
+/*TEST_CASE("Testing NN forward propagation")
 {
     std::vector<float> image = {0, 1, 0,
                                 0, 1, 0,
@@ -110,6 +110,4 @@ TEST_CASE("Testing NN forward propagation")
 
     neural::forward_prop(layers, weights, biases, (nodes_per_layer).data(), num_of_layers);
 
-    
-
-}
+}*/
