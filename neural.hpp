@@ -112,10 +112,12 @@ namespace neural
             cudaMemcpy(d_weights, weights[i].data(), sizeof(float)*nodes_per_layer[i]*nodes_per_layer[i+1], cudaMemcpyHostToDevice);
             cudaMemcpy(d_biases, biases[i].data(), sizeof(float)*nodes_per_layer[i], cudaMemcpyHostToDevice);
 
-            dim3 threadsPerBlock(64, 1);  // 64 threads in the x-dimension
-            dim3 numBlocks((nodes_per_layer[i+1] + threadsPerBlock.x - 1) / threadsPerBlock.x, 1);
+            // dim3 threadsPerBlock(64, 1);  // 64 threads in the x-dimension
+            // dim3 numBlocks(1, (nodes_per_layer[i+1] + threadsPerBlock.x - 1) / threadsPerBlock.x);
+            dim3 threadsPerBlock(nodes_per_layer[i], nodes_per_layer[i+1]);
+            dim3 numBlocks(1, 1);
 
-            cuda_ops::matrix_mult<<<numBlocks,threadsPerBlock>>>(d_layer, d_weights, d_temp, 1, nodes_per_layer[i], nodes_per_layer[i+1]);
+            cuda_ops::matrix_mult<<<numBlocks,threadsPerBlock>>>(d_layer, d_weights, d_temp, 1, nodes_per_layer[i], nodes_per_layer[i+1]); // store layers as row vectors
 
             std::cout << "Iteration: " << i << ", Multiplication Done" << std::endl;
 
@@ -148,7 +150,7 @@ namespace neural
 
 	std::cout << std::endl;
 
-	layers[num_of_layers - 1] = Softmax(layers[num_of_layers - 1].data(), 1, nodes_per_layer[num_of_layers - 1], numBlocks, threadsPerBlock);
+	layers[num_of_layers - 1] = Softmax(layers[num_of_layers - 1].data(), nodes_per_layer[num_of_layers - 1], 1, numBlocks, threadsPerBlock);
 
         std::cout << "Softmax Applied" << std::endl;
 
