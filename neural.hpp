@@ -101,10 +101,12 @@ namespace neural
             float* d_layer;
             float* d_weights;
             float* d_biases;
+            float* d_temp;
             
             cudaMalloc(&d_layer, sizeof(float)*nodes_per_layer[i]);
             cudaMalloc(&d_weights, sizeof(float)*nodes_per_layer[i]*nodes_per_layer[i+1]);
             cudaMalloc(&d_biases, sizeof(float)*nodes_per_layer[i]);
+            cudaMalloc(&d_temp, sizeof(float)*nodes_per_layer[i+1]);
 
             cudaMemcpy(d_layer, layers[i].data(), sizeof(float)*nodes_per_layer[i], cudaMemcpyHostToDevice);
             cudaMemcpy(d_weights, weights[i].data(), sizeof(float)*nodes_per_layer[i]*nodes_per_layer[i+1], cudaMemcpyHostToDevice);
@@ -113,7 +115,7 @@ namespace neural
             dim3 threadsPerBlock(64, 1);  // 64 threads in the x-dimension
             dim3 numBlocks((nodes_per_layer[i+1] + threadsPerBlock.x - 1) / threadsPerBlock.x, 1);
 
-            cuda_ops::matrix_mult<<<numBlocks,threadsPerBlock>>>(d_layer, d_weights, d_layer, 1, nodes_per_layer[i], nodes_per_layer[i+1]);
+            cuda_ops::matrix_mult<<<numBlocks,threadsPerBlock>>>(d_layer, d_weights, d_temp, 1, nodes_per_layer[i], nodes_per_layer[i+1]);
 
             std::cout << "Iteration: " << i << ", Multiplication Done" << std::endl;
 
@@ -121,11 +123,12 @@ namespace neural
 
             std::cout << "Iteration: " << i << ", Addition Done" << std::endl;
 
-            cudaMemcpy(layers[i+1].data(), d_layer, sizeof(float)*nodes_per_layer[i+1], cudaMemcpyDeviceToHost);
+            cudaMemcpy(layers[i+1].data(), d_temp, sizeof(float)*nodes_per_layer[i+1], cudaMemcpyDeviceToHost);
 
             cudaFree(d_layer);
             cudaFree(d_weights);
             cudaFree(d_biases);
+            cudaFree(d_temp);
 
         }
 
