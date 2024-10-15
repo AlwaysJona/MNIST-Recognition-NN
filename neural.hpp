@@ -114,8 +114,12 @@ namespace neural
 
             // dim3 threadsPerBlock(64, 1);  // 64 threads in the x-dimension
             // dim3 numBlocks(1, (nodes_per_layer[i+1] + threadsPerBlock.x - 1) / threadsPerBlock.x);
-            dim3 threadsPerBlock(nodes_per_layer[i], nodes_per_layer[i+1]);
-            dim3 numBlocks(1, 1);
+
+            //dim3 threadsPerBlock(nodes_per_layer[i], nodes_per_layer[i+1]);
+
+	    // trying new way of organizing blocks and grids
+	    dim3 threadsPerBlock(16, 16);
+            dim3 numBlocks((nodes_per_layer[i] + threadsPerBlock.x - 1)/threadsPerBlock.x , (nodes_per_layer[i+1] + threadsPerBlock.y -1)/threadsPerBlock.y);
 
             cuda_ops::matrix_mult<<<numBlocks,threadsPerBlock>>>(d_layer, d_weights, d_temp, 1, nodes_per_layer[i], nodes_per_layer[i+1]); // store layers as row vectors
 
@@ -136,8 +140,11 @@ namespace neural
 
         std::cout << "All iterations completed" << std::endl;
 
-        dim3 threadsPerBlock(64, 1);  // 64 threads in the x-dimension
-        dim3 numBlocks((nodes_per_layer[num_of_layers - 1] + threadsPerBlock.x - 1) / threadsPerBlock.x, 1);
+        // dim3 threadsPerBlock(64, 1);  // 64 threads in the x-dimension
+        // dim3 numBlocks((nodes_per_layer[num_of_layers - 1] + threadsPerBlock.x - 1) / threadsPerBlock.x, 1);
+
+	dim3 threadsPerBlock(16, 16);
+        dim3 numBlocks((nodes_per_layer[num_of_layers - 1] + threadsPerBlock.x - 1)/threadsPerBlock.x , 1);
 
         // applying softmax to the last layer
 

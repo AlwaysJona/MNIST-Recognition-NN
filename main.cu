@@ -14,7 +14,7 @@ int main()
     std::string path = "./../mnist_dataset/t10k-images-idx3-ubyte";
 
     images = MNIST::read_images(path, numIm, numRows, numCol);
-
+    std::cout<<"\t Version 0.1 \t \n";
     std::cout<< "Number of Images: " << numIm << ", Number of Rows per Image: " << numRows << ", Number of Columns per Image: " << numCol << std::endl;
     
 //*******************************************TESTING IN PROGRESS********************************************************* */

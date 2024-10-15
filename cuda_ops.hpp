@@ -9,7 +9,7 @@ namespace cuda_ops
     {
         int rowA = threadIdx.x + blockDim.x*blockIdx.x;
         int colB = threadIdx.y + blockDim.y*blockIdx.y;
-        printf("Row %i Col %i \n", rowA, colB);
+        // printf("Row %i Col %i \n", rowA, colB);
         if(rowA < m && colB < n)
         {
             float sum = 0;

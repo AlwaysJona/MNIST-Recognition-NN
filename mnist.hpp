@@ -9,7 +9,7 @@
 #include <cuda.h>
 
 namespace MNIST
-{
+{   // used to properly reading binary numbers from the mnist dataset
     u_int32_t read_and_bitswap(std::ifstream &file)
     {
         u_int32_t result = 0;
@@ -17,6 +17,7 @@ namespace MNIST
         return __builtin_bswap32(result);
     }
 
+    // used to read the images and store them in an array, returns 2D array array of integers, the images
     std::vector<std::vector<u_int8_t>> read_images(std::string path, u_int32_t &numIm, u_int32_t &numRows, u_int32_t &numCol)
     {
         std::ifstream file(path, std::ios::binary);
@@ -42,6 +43,7 @@ namespace MNIST
         return images;
     }
 
+    // reading the list of labels, return array of integers, the labels for each integer
     std::vector<u_int8_t> read_labels(std::string path)
     {
         std::ifstream file(path, std::ios::binary);
@@ -66,6 +68,7 @@ namespace MNIST
         return labels;
     }
 
+    // device function, used to format the pixels in the images to floating point values between 0 and 1
     __global__
     void gpu_format_image(const u_int8_t* image, float* formatted, const int size)
     {
@@ -78,6 +81,7 @@ namespace MNIST
 
     }
 
+    // host funtion to format the images, returns array of formatted pixels, formats 1 image
     std::vector<float> format_image(std::vector<u_int8_t> image, const int num_of_pixles, const int size)
     {
         std::vector<float> formatted(num_of_pixles);
